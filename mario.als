@@ -9,8 +9,18 @@ sig mario {
 abstract sig mario_state {
 }
 
-sig pequeno, grande, fogo, capa, invencivel, morto extends mario_state{
+sig little_mario extends mario_state {
 }
+sig big_mario extends mario_state {
+}
+sig fire_mario extends mario_state {
+} 
+sig cape_mario extends mario_state {
+} 
+sig invencible_mario extends mario_state {
+}
+sig dead_mario extends mario_state {
+} 
 
 --fatos
 
