@@ -1,108 +1,138 @@
 enum EstadoMario {
-    MarioBros,
-    SuperMario,
-    FireMario,
-    MarioCapa,
-    MarioMorto,
-    MarioInvencivel
+    MarioPequeno,		-- Mario Bros
+    MarioGrande,		-- Super Mario 
+    MarioPoderDeFogo,	-- Fire Mario
+    MarioPoderDeVoo,	-- Cape Mario
+    MarioInvencivel,			-- Invencible Mario
+    MarioMorto			-- Dead Mario
 }
 
 sig Mario {
 	curState: EstadoMario,
 	nextState:EstadoMario,
-	contact: EntidadeJogo
+	contact: Iteracao
 }
 
-abstract sig EntidadeJogo {}
+abstract sig Iteracao {}
 
-abstract sig Item extends EntidadeJogo {}
-sig Flor, Pena, Cogumelo, Estrela extends Item {}
+sig Flor, Pena, Cogumelo, Estrela, Inimigo, NIL extends Iteracao {}
 
-sig Inimigo extends EntidadeJogo {}
-sig Nada extends EntidadeJogo {}
+-- Estado inicial
+pred init[m:Mario] { 				
+	m.curState = MarioPequeno
+	m.nextState = MarioPequeno
+	m.contact = NIL
+}
 
-pred init[m:Mario] {
-	m.curState = MarioBros
-	m.nextState = MarioBros
-	m.contact = Nada
+-- Cada item está ligado a um único Mario 
+fact oneItemToOneMario{
+	all i:Iteracao |
+		one i.~contact 
 }
 
 fact CauseOfDeath{
-	all m:Mario |(m.nextState = MarioMorto) <=> (m.curState = MarioMorto or (m.curState = MarioBros and m.contact = Inimigo))
+	all m:Mario |
+		(m.nextState = MarioMorto) <=> (m.curState = MarioMorto or (m.curState = MarioPequeno and m.contact = Inimigo))
 }
 
 fact CantRevive {
-	all m: Mario | m.curState = MarioMorto implies m.nextState = MarioMorto
+	all m: Mario |
+		m.curState = MarioMorto 
+		implies m.nextState = MarioMorto
 }
 
 fact ContactNothing {
-	all m:Mario | (m.contact = Nada) implies (m.curState = m.nextState)
+	all m:Mario |
+		(m.contact = NIL) 
+		implies (m.curState = m.nextState)
 }
 
 fact BackToSuper{
-	all m:Mario |   ((m.curState = FireMario or m.curState = MarioCapa) and m.contact = Inimigo) implies m.nextState = SuperMario
+	all m:Mario |
+		((m.curState = MarioPoderDeFogo or m.curState = MarioPoderDeVoo) and m.contact = Inimigo) 
+		implies m.nextState = MarioGrande
 }
 
 fact GetStar{
-	all m:Mario |  (m.curState != MarioMorto and m.contact = Estrela) implies m.nextState = MarioInvencivel
+	all m:Mario |
+		(m.curState != MarioMorto and m.contact = Estrela) 
+		implies m.nextState = MarioInvencivel
 }
 fact GetFlower{
-	all m:Mario |  (m.curState != MarioMorto and m.contact = Flor) implies m.nextState = FireMario
+	all m:Mario |
+		(m.curState != MarioMorto and m.contact = Flor) 
+		implies m.nextState = MarioPoderDeFogo
 }
 fact GetFeather{
-	all m:Mario |  (m.curState != MarioMorto and m.contact = Pena) implies m.nextState = MarioCapa
+	all m:Mario |
+		(m.curState != MarioMorto and m.contact = Pena) 
+		implies m.nextState = MarioPoderDeVoo
 }
 
 
 //Mario Bros
 fact GetMushroom{
-	all m:Mario | (m.curState = MarioBros and m.contact = Cogumelo) implies m.nextState = SuperMario
+	all m:Mario |
+		(m.curState = MarioPequeno and m.contact = Cogumelo) 
+		implies m.nextState = MarioGrande
 }
 
 //Super Mario
 fact SuperContactWithEnemy{
-	all m:Mario |  (m.curState = SuperMario and m.contact = Inimigo) implies m.nextState = MarioBros
+	all m:Mario |
+		(m.curState = MarioGrande and m.contact = Inimigo) 
+		implies m.nextState = MarioPequeno
 }
 
-fact SuperContactWithEnemyMushroom{
-	all m:Mario |  (m.curState = SuperMario and m.contact = Cogumelo) implies m.nextState = SuperMario
+fact SuperContactWithMushroom{
+	all m:Mario |
+		(m.curState = MarioGrande and m.contact = Cogumelo) 
+		implies m.nextState = MarioGrande
 }
 
 //Fire Mario
 fact StayFire{
-	all m:Mario | (m.curState = FireMario and (m.contact = Cogumelo or m.contact = Flor)) implies m.nextState = FireMario
+	all m:Mario |
+		(m.curState = MarioPoderDeFogo and (m.contact = Cogumelo or m.contact = Flor)) 
+		implies m.nextState = MarioPoderDeFogo
 }
 
 //Mario Capa
 fact CapeChanges{
-	all m:Mario | (m.curState = MarioCapa and (m.contact = Cogumelo or m.contact = Pena)) implies m.nextState = MarioCapa
+	all m:Mario |
+		(m.curState = MarioPoderDeVoo and (m.contact = Cogumelo or m.contact = Pena)) 
+		implies m.nextState = MarioPoderDeVoo
 }
 
 //Mario Invencível
 fact KeepsInvencible{
-	all m:Mario | (m.curState = MarioInvencivel and (m.contact = Inimigo or m.contact = Cogumelo or m.contact = Estrela)) implies m.nextState = MarioInvencivel
+	all m:Mario |
+		(m.curState = MarioInvencivel and (m.contact = Inimigo or m.contact = Cogumelo or m.contact = Estrela)) 
+		implies m.nextState = MarioInvencivel
 }
 
 fact InvencibleChanges{
-	all m:Mario | (m.curState = MarioInvencivel and (m.contact != Pena and m.contact != Flor)) implies m.nextState = MarioInvencivel
+	all m:Mario |
+		(m.curState = MarioInvencivel and (m.contact != Pena and m.contact != Flor)) 
+		implies m.nextState = MarioInvencivel
 }
 
 // Predicados
 
 pred ContactWithShroom[m:Mario] {
 	m.contact = Cogumelo
-	m.nextState = SuperMario
+	m.nextState = MarioGrande
 }
 
 pred ContactWithFlower[m:Mario] {
 	m.contact = Flor
-	m.nextState = FireMario
+	m.nextState = MarioPoderDeFogo
 }
 
 pred ContactWithFeather[m:Mario] {
 	m.curState != MarioMorto
 	m.contact = Pena
-	m.nextState = MarioCapa
+	m.nextState = MarioPoderDeVoo
 }
 
 pred ContactWithStar[m:Mario] {
@@ -111,35 +141,47 @@ pred ContactWithStar[m:Mario] {
 }
 
 pred ContactWithShroomAndDontChange[m:Mario] {
-	m.curState = FireMario or m.curState = SuperMario or m.curState = MarioCapa or m.curState = MarioInvencivel
+	m.curState = MarioPoderDeFogo or m.curState = MarioGrande or m.curState = MarioPoderDeVoo or m.curState = MarioInvencivel
 	m.contact = Cogumelo
 	m.nextState = m.curState
 }
 
 //TESTES
 
-pred testKeepsStarMario [] {
-	all m:Mario | m.contact = Estrela implies (m.nextState != MarioCapa and m.nextState != FireMario and m.nextState != SuperMario and m.nextState != MarioBros)
+pred testeMarioColetaCogumeloENaoMuda[] {
+	all m:Mario |
+		((m.curState = MarioPoderDeFogo or m.curState = MarioGrande or m.curState = MarioPoderDeVoo or m.curState = MarioInvencivel) and m.contact = Cogumelo) 
+		implies m.nextState = m.curState
 }
 
-pred testKeepsFire[]{
-	all m:Mario | (m.curState = FireMario and (m.contact = Flor or m.contact = Cogumelo)) implies m.nextState = FireMario
+pred testeMarioEstrelaConsistente [] {
+	all m:Mario |
+		m.contact = Estrela 
+		implies (m.nextState != MarioPoderDeVoo and m.nextState != MarioPoderDeFogo and m.nextState != MarioGrande and m.nextState != MarioPequeno)
 }
 
-pred testKeepsCape [] {
-	all m:Mario | (m.contact = Pena and m.curState != MarioMorto) implies (m.nextState != MarioInvencivel and m.nextState != MarioBros and m.nextState != FireMario and m.nextState != SuperMario)
+pred testeMarioCapaConsistente [] {
+	all m:Mario |
+		(m.contact = Pena and m.curState != MarioMorto) 
+		implies (m.nextState != MarioInvencivel and m.nextState != MarioPequeno and m.nextState != MarioPoderDeFogo and m.nextState != MarioGrande)
 }
 
-pred testKeepsShroomMario[] {
-	all m:Mario | (m.curState = FireMario or m.curState = SuperMario or m.curState = MarioCapa or m.curState = MarioInvencivel and m.contact = Cogumelo) implies m.nextState = m.curState
+pred testeFireMarioConsistente[]{
+	all m:Mario |
+		(m.curState = MarioPoderDeFogo and (m.contact = Flor or m.contact = Cogumelo)) 
+		implies m.nextState = MarioPoderDeFogo
 }
 
-assert testEverything {
-	testKeepsShroomMario and
-	testKeepsStarMario and
-	testKeepsCape and
-	testKeepsFire
+
+
+assert testeGeral {
+	testeMarioColetaCogumeloENaoMuda and
+	testeMarioEstrelaConsistente and
+	testeMarioCapaConsistente and
+	testeFireMarioConsistente
 }
+
+--check testeGeral
 
 pred show [] {
 }
