@@ -1,0 +1,101 @@
+/-- 
+
+Projeto de Lógica 2019.2
+Tema 8: Super Mario Bros
+
+GUILHERME DE MELO CARNEIRO
+JONATHAN TAVARES DA SILVA
+LOURIVAL GONÇALVES PRATA NETTO
+MIRELLA QUINTANS LYRA
+TULIO ARAUJO CUNHA
+
+--/
+
+MODULE main
+VAR
+    EstadoMario: {
+        MarioPequeno,
+        MarioGrande,
+        MarioPoderDeFogo,
+        MarioPoderDeVoo,
+        MarioInvencivel,
+        MarioMorto
+    };
+
+    Iteracao: {
+        Flor,
+        Pena,
+        Cogumelo,
+        Estrela,
+        Inimigo,
+        NIL
+    };
+
+ASSIGN
+    init(EstadoMario) := MarioPequeno;
+    init(Iteracao) := NIL;
+    next(EstadoMario) :=
+        case
+            -- Transicoes de estado do MarioPequeno:
+            EstadoMario=MarioPequeno & Iteracao=Cogumelo: MarioGrande;
+            EstadoMario=MarioPequeno & Iteracao=Flor: MarioPoderDeFogo;
+            EstadoMario=MarioPequeno & Iteracao=Estrela: MarioInvencivel;
+            EstadoMario=MarioPequeno & Iteracao=Pena: MarioPoderDeVoo;
+            EstadoMario=MarioPequeno & Iteracao=Inimigo: MarioMorto;
+            EstadoMario=MarioPequeno & Iteracao=NIL: MarioPequeno;
+            
+            -- Transicoes de estado do MarioGrande:
+            EstadoMario=MarioGrande & Iteracao=Flor: MarioPoderDeFogo;
+            EstadoMario=MarioGrande & Iteracao=Estrela: MarioInvencivel;
+            EstadoMario=MarioGrande & Iteracao=Pena: MarioPoderDeVoo;
+            EstadoMario=MarioGrande & Iteracao=Cogumelo: MarioGrande;
+            EstadoMario=MarioGrande & Iteracao=Inimigo: MarioPequeno;
+            EstadoMario=MarioGrande & Iteracao=NIL: MarioGrande;
+
+            -- Transicoes de estado do MarioPoderDeFogo:
+            EstadoMario=MarioPoderDeFogo & Iteracao=Flor: MarioPoderDeFogo;
+            EstadoMario=MarioPoderDeFogo & Iteracao=Estrela: MarioInvencivel;
+            EstadoMario=MarioPoderDeFogo & Iteracao=Pena: MarioPoderDeVoo;
+            EstadoMario=MarioPoderDeFogo & Iteracao=Cogumelo: MarioPoderDeFogo;
+            EstadoMario=MarioPoderDeFogo & Iteracao=Inimigo: MarioGrande;
+            EstadoMario=MarioPoderDeFogo & Iteracao=NIL: MarioPoderDeFogo;
+
+            -- Transicoes de estado do MarioPoderDeVoo:
+            EstadoMario=MarioPoderDeVoo & Iteracao=Flor: MarioPoderDeFogo;
+            EstadoMario=MarioPoderDeVoo & Iteracao=Estrela: MarioInvencivel;
+            EstadoMario=MarioPoderDeVoo & Iteracao=Pena: MarioPoderDeVoo;
+            EstadoMario=MarioPoderDeVoo & Iteracao=Cogumelo: MarioPoderDeVoo;
+            EstadoMario=MarioPoderDeVoo & Iteracao=Inimigo: MarioGrande;
+            EstadoMario=MarioPoderDeVoo & Iteracao=NIL: MarioPoderDeVoo;
+
+            -- Transicoes de estado do MarioInvencivel:
+            EstadoMario=MarioInvencivel & Iteracao=Flor: MarioPoderDeFogo;
+            EstadoMario=MarioInvencivel & Iteracao=Estrela: MarioInvencivel;
+            EstadoMario=MarioInvencivel & Iteracao=Pena: MarioPoderDeVoo;
+            EstadoMario=MarioInvencivel & Iteracao=Cogumelo: MarioInvencivel;
+            EstadoMario=MarioInvencivel & Iteracao=Inimigo: MarioInvencivel;
+            EstadoMario=MarioInvencivel & Iteracao=NIL: MarioInvencivel;
+
+            -- Se morto, então morto
+            EstadoMario=MarioMorto: MarioMorto;
+
+            -- Default
+            TRUE: { MarioPequeno, MarioGrande, MarioPoderDeFogo, MarioPoderDeVoo, MarioMorto, MarioInvencivel };
+        esac;
+
+SPEC
+      AG(EstadoMario != MarioMorto & Iteracao = Estrela -> AX EstadoMario = MarioInvencivel)
+    & AG(EstadoMario =  MarioMorto -> AF EstadoMario = MarioMorto)
+    & AG(EstadoMario != MarioMorto & Iteracao = Flor -> AX EstadoMario = MarioPoderDeFogo)
+    & AG(EstadoMario != MarioMorto & Iteracao = Pena -> AX EstadoMario = MarioPoderDeVoo)
+    & AG(EstadoMario =  MarioMorto & Iteracao = Estrela -> AX EstadoMario != MarioInvencivel)
+    & AG(EstadoMario =  MarioMorto & Iteracao = Flor -> AX EstadoMario != MarioPoderDeFogo)
+    & AG(EstadoMario =  MarioMorto & Iteracao = Pena -> AX EstadoMario != MarioPoderDeVoo)
+    & AG(EstadoMario != MarioMorto & Iteracao = Estrela -> AX EstadoMario != MarioMorto)
+    & AG(EstadoMario != MarioMorto & Iteracao = Flor -> AX EstadoMario != MarioMorto)
+    & AG(EstadoMario != MarioMorto & Iteracao = Pena -> AX EstadoMario != MarioMorto)
+    & AG(EstadoMario != MarioMorto & Iteracao = Cogumelo -> AX EstadoMario != MarioMorto)
+    & AG(EstadoMario =  MarioGrande & Iteracao = Estrela -> AX EstadoMario != MarioPoderDeFogo)
+    & AG(EstadoMario =  MarioGrande & Iteracao = Flor -> AX EstadoMario != MarioPoderDeVoo)
+    & AG(EstadoMario =  MarioGrande & Iteracao = Pena -> AX EstadoMario != MarioInvencivel)
+    & AG(EstadoMario =  MarioPequeno & Iteracao = Cogumelo -> AX EstadoMario = MarioGrande);
